@@ -324,7 +324,7 @@ def index():
     if form.validate_on_submit():
         term= get_or_create_search_term(form.search.data)
         return redirect(url_for('search_results', search_term=term))
-    # TODO 364: Edit this view function, which has a provided return statement, so that the GifSearchForm can be rendered.
+    #TODO 364: Edit this view function, which has a provided return statement, so that the GifSearchForm can be rendered.
     # If the form is submitted successfully:
     # invoke get_or_create_search_term on the form input and redirect to the function corresponding to the path /gifs_searched/<search_term> in order to see the results of the gif search. (Just a couple lines of code!)
 
