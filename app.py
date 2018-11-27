@@ -247,12 +247,12 @@ def get_or_create_search_term(term):
 def get_or_create_collection(name, current_user, gif_list=[]):
     """Always returns a PersonalGifCollection instance"""
     user_collection = PersonalGifCollection.query.filter_by(name=name, user_id=current_user.id).first()
-    if use_collection:
+    if user_collection:
         return user_collection
     else:
         user_collection = PersonalGifCollection(name=name, user_id=current_user.id, gifs=gif_list)
-        for x in gifs:
-            collection.gifs.append(x)
+        for x in gif_list:
+            user_collection.gifs.append(x)
         db.session.add(user_collection)
         db.session.commit()
         return user_collection
@@ -322,8 +322,8 @@ def secret():
 def index():
     form = GifSearchForm()
     if form.validate_on_submit():
-        get_or_create_search_term(form.search.data)
-        return redirect(url_for('search_results', search_term=form.search.data))
+        term= get_or_create_search_term(form.search.data)
+        return redirect(url_for('search_results', search_term=term))
     # TODO 364: Edit this view function, which has a provided return statement, so that the GifSearchForm can be rendered.
     # If the form is submitted successfully:
     # invoke get_or_create_search_term on the form input and redirect to the function corresponding to the path /gifs_searched/<search_term> in order to see the results of the gif search. (Just a couple lines of code!)
@@ -362,21 +362,37 @@ def create_collection():
     # TODO 364: If the form validates on submit, get the list of the gif ids that were selected from the form. Use the get_gif_by_id function to create a list of Gif objects.  Then, use the information available to you at this point in the function (e.g. the list of gif objects, the current_user) to invoke the get_or_create_collection function, and redirect to the page that shows a list of all your collections.
     # If the form is not validated, this view function should simply render the create_collection.html template and send the form to the template.
 #!!!!!!
-    #if form.validate_on_submit():
+
+    if request.method == "POST":
+        print("*************")
+        gifs_wanted = form.gif_picks.data
+        print(gifs_wanted)
+        gifs_info =[]
+        for x in gifs_wanted:
+            gif_object = get_gif_by_id(int(x))
+            gifs_info.append(gif_object)
+
+        get_or_create_collection(name = form.name.data, current_user= current_user, gif_list = gifs_info)
+        return redirect(url_for('collections'))
+    return render_template('create_collection.html', form = form)
+
+
 
 
 @app.route('/collections',methods=["GET","POST"])
 @login_required
 def collections():
-    all_collections = PersonalGifCollection.query.filter_by(user_id=current_user.id).all()
-    return render_template('collections.html',collections=all_collections) # Replace with code
+    collections = PersonalGifCollection.query.filter_by(user_id=current_user.id).all()
+    return render_template('collections.html',collections=collections) # Replace with code
     # TODO 364: This view function should render the collections.html template so that only the current user's personal gif collection links will render in that template. Make sure to examine the template so that you send it the correct data!
 
 # Provided
 @app.route('/collection/<id_num>')
 def single_collection(id_num):
     id_num = int(id_num)
+    print(id_num)
     collection = PersonalGifCollection.query.filter_by(id=id_num).first()
+    print(collection)
     gifs = collection.gifs.all()
     return render_template('collection.html',collection=collection, gifs=gifs)
 
